@@ -1,3 +1,3 @@
-dst=D:\backup\keys\
-src=C:\Users\Dan\Desktop\keys\
+dst=D:\test\dst
+src=D:\test\src
 ttl=60
