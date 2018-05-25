@@ -1,3 +1,0 @@
-dst=D:\test\dst
-src=D:\test\src
-ttl=60
