@@ -22,9 +22,9 @@ main(int argc, char* argv[])
   string filename, line;
   string str[3];
 
-  //  cout << "Enter the file name with ext: " << endl;
-  //  cin >> filename;
-  filename = "config.txt";
+  cout << "Enter the file name with ext: " << endl;
+  cin >> filename;
+  //  filename = "config.txt";
 
   std::ifstream file(filename); //неоднозначное определение, поэтому std::
 
