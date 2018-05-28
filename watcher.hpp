@@ -1,23 +1,34 @@
 #pragma once
 
+#include <QFileSystemWatcher>
+#include <QMap>
 #include <QObject>
 
 #include <boost/filesystem.hpp>
 
-#include "basic.h"
+using namespace boost::filesystem;
 
-class Watcher : public QObject, private Basic {
+class Watcher : public QObject
+{
   Q_OBJECT
 
- public:
+public:
   explicit Watcher(QObject* parent = Q_NULLPTR);
+
+  void addWatchPath(QString path);
+  void recursive_copy(path src, path dst);
+  void recursive_delete(path dst);
 
   int ttl;
   boost::filesystem::path dst;
   boost::filesystem::path src;
 
- public slots:
+public slots:
   void sdirChange(const QString& dir);
-  void sfileChange(const QString& file);
   void timersSlot();
+
+private:
+  QMap<QString, QStringList> _currContents;
+  QFileSystemWatcher _sysWatcher;
+  inline void endOfttl();
 };

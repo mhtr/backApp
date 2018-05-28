@@ -1,13 +1,13 @@
 CONFIG += c++17 console
 
+QMAKE_CXXFLAGS += /std:c++17
+
 HEADERS += \
-    watcher.hpp \
-    basic.h
+    watcher.hpp
 
 SOURCES += \
     main.cpp \
-    watcher.cpp \
-    basic.cpp
+    watcher.cpp
 
 INCLUDEPATH += D:\boost_1_67_0
 
