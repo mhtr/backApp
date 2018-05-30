@@ -56,14 +56,13 @@ void Watcher::sdirChange(const QString& path) {
 
       foreach(QString file, newFile) {
         // Handle Operation on new files.....
-        QString from = QString("%1\\%2").arg(path).arg(file);
-        _sysWatcher.addPath(from);
+        std::filesystem::path from = path.toStdWString() / file.toStdWString();
+        _sysWatcher.addPath(QString::fromStdWString(from.wstring()));
 
-        auto to = from.toStdWString();
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        to.replace(0, src.wstring().size(), converter.from_bytes(dst.string()));
+        auto to = from.wstring();
+        to.replace(0, src.wstring().size(), dst.wstring());
 
-        recursive_copy(from.toStdWString(), to);
+        recursive_copy(from, to);
       }
     }
 
