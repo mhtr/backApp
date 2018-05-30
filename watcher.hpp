@@ -4,15 +4,16 @@
 #include <QMap>
 #include <QObject>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
-class Watcher : public QObject
-{
+// using namespace std::filesystem;
+
+class Watcher : public QObject {
   Q_OBJECT
 
-public:
+ public:
   explicit Watcher(QObject* parent = Q_NULLPTR);
 
   void addWatchPath(QString path);
@@ -20,14 +21,15 @@ public:
   void recursive_delete(path dst);
 
   int ttl;
-  boost::filesystem::path dst;
-  boost::filesystem::path src;
+  path dst;
+  path src;
 
-public slots:
+ public
+slots:
   void sdirChange(const QString& dir);
   void timersSlot();
 
-private:
+ private:
   QMap<QString, QStringList> _currContents;
   QFileSystemWatcher _sysWatcher;
   inline void endOfttl();

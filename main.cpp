@@ -3,8 +3,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QTimer>
-#include <boost/filesystem.hpp>
-#include <boost/system/error_code.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -12,11 +11,9 @@
 #include "watcher.hpp"
 
 using namespace std;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
-int
-main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
   setlocale(LC_ALL, "");
   QCoreApplication app(argc, argv);
   string filename, line;
@@ -26,13 +23,13 @@ main(int argc, char* argv[])
   cin >> filename;
   //  filename = "config.txt";
 
-  std::ifstream file(filename); //неоднозначное определение, поэтому std::
+  std::ifstream file(filename);  //неоднозначное определение, поэтому std::
 
   if (file.is_open()) {
     while (file.good()) {
       for (size_t i = 0; i < sizeof(str) / sizeof(string); i++) {
-        getline(file, line); //считываем файл построчно и строку записываем в
-                             //переменную line
+        getline(file, line);  //считываем файл построчно и строку записываем в
+                              //переменную line
         str[i] = line;
       }
     }
@@ -44,7 +41,7 @@ main(int argc, char* argv[])
 
   Watcher watcher;
   watcher.ttl =
-    atoi((str[2].substr(str[2].find('=') + 1, str[2].size() - 1)).c_str());
+      atoi((str[2].substr(str[2].find('=') + 1, str[2].size() - 1)).c_str());
   watcher.dst = str[0].substr(str[0].find('=') + 1, str[0].size() - 1);
   watcher.src = str[1].substr(str[1].find('=') + 1, str[1].size() - 1);
 

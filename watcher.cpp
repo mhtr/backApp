@@ -4,26 +4,18 @@
 
 #include <codecvt>
 #include <iostream>
+#include <filesystem>
 
 #include <boost/exception/all.hpp>
 
 #include "watcher.hpp"
 
-Watcher::Watcher(QObject* parent)
-  : QObject(parent)
-  , ttl(0)
-  , dst("")
-  , src("")
-{
-  connect(&_sysWatcher,
-          &QFileSystemWatcher::directoryChanged,
-          this,
+Watcher::Watcher(QObject* parent) : QObject(parent), ttl(0), dst(""), src("") {
+  connect(&_sysWatcher, &QFileSystemWatcher::directoryChanged, this,
           &Watcher::sdirChange);
 }
 
-void
-Watcher::sdirChange(const QString& path)
-{
+void Watcher::sdirChange(const QString& path) {
   qDebug() << "Directory updated: " << path;
 
   // Compare the latest contents to saved contents for the dir updated to find
@@ -33,7 +25,7 @@ Watcher::sdirChange(const QString& path)
   const QDir dir(path);
 
   QStringList newEntryList = dir.entryList(
-    QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files, QDir::DirsFirst);
+      QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files, QDir::DirsFirst);
 
   QSet<QString> newDirSet = QSet<QString>::fromList(newEntryList);
 
@@ -57,21 +49,19 @@ Watcher::sdirChange(const QString& path)
       qDebug() << "File Renamed from " << newFile.first() << " to "
                << deleteFile.first();
     }
-  }
-
-  else {
+  } else {
     // New File/Dir Added to Dir
     if (!newFile.isEmpty()) {
       qDebug() << "New Files/Dirs added: " << newFile;
 
-      foreach (QString file, newFile) {
+      foreach(QString file, newFile) {
         // Handle Operation on new files.....
         QString from = QString("%1\\%2").arg(path).arg(file);
         _sysWatcher.addPath(from);
 
         auto to = from.toStdWString();
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        to.replace(0, src.size(), converter.from_bytes(dst.string()));
+        to.replace(0, src.wstring().size(), converter.from_bytes(dst.string()));
 
         recursive_copy(from.toStdWString(), to);
       }
@@ -81,24 +71,20 @@ Watcher::sdirChange(const QString& path)
 
     if (!deleteFile.isEmpty()) {
       qDebug() << "Files/Dirs deleted: " << deleteFile;
-      foreach (QString file, deleteFile) {
+      foreach(QString file, deleteFile) {
         // Handle operation of each deleted file....
       }
     }
   }
 }
 
-void
-Watcher::timersSlot()
-{
+void Watcher::timersSlot() {
   recursive_delete(dst);
   std::cout << "TTL is out\n" << std::endl;
   std::exit(0);
 }
 
-void
-Watcher::addWatchPath(QString path)
-{
+void Watcher::addWatchPath(QString path) {
   qDebug() << "Add to watch: " << path;
 
   _sysWatcher.addPath(path);
@@ -113,7 +99,7 @@ Watcher::addWatchPath(QString path)
   if (f.isDir()) {
     const QDir dirw(path);
     _currContents[path] = dirw.entryList(
-      QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files, QDir::DirsFirst);
+        QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files, QDir::DirsFirst);
   }
 }
 
@@ -125,15 +111,13 @@ Watcher::endOfttl()
   QTimer::singleShot(ttl * 1000, this, &Watcher::timersSlot);
 }*/
 
-void
-Watcher::recursive_copy(path src, path dst)
-{
+void Watcher::recursive_copy(path src, path dst) {
   try {
     if (is_directory(src)) {
       create_directories(dst);
       for (auto& from : recursive_directory_iterator(src)) {
         auto to = from.path().string();
-        to.replace(0, src.size(), dst.string());
+        to.replace(0, src.wstring().size(), dst.string());
         if (is_directory(from)) {
           create_directories(to);
         } else {
@@ -143,16 +127,15 @@ Watcher::recursive_copy(path src, path dst)
     } else {
       copy_file(src, dst);
     }
-  } catch (...) {
+  }
+  catch (...) {
     std::cout << boost::current_exception_diagnostic_information() << std::endl;
   }
 }
 
-void
-Watcher::recursive_delete(path dst)
-{
+void Watcher::recursive_delete(path dst) {
   std::cout << "Deleting : " << std::endl;
-  for (directory_entry& item : directory_iterator(dst)) {
+  for (auto& item : directory_iterator(dst)) {
     std::cout << item.path() << std::endl;
     if (exists(item.path())) {
       if (is_directory(item.path())) {
