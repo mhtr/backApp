@@ -17,74 +17,60 @@
 using namespace std;
 using namespace std::filesystem;
 
-int main(int argc, char* argv[]) {
-  setlocale(LC_ALL, "");
-  QCoreApplication app(argc, argv);
-  /* string filename, line;
-   string str[3];
+int main(int argc, char *argv[])
+{
+    setlocale(LC_ALL, "");
+    QCoreApplication app(argc, argv);
 
-   cout << "Enter the file name with ext: " << endl;
-   cin >> filename;
-   //  filename = "config.txt";
+    QTextStream stream(stdin);
+    QString filename;
+    std::cout << "Enter the file name with ext: ";
+    stream >> filename;
+//    filename = "conf.txt";
 
-   std::ifstream file(filename);  //неоднозначное определение, поэтому std::
+    Watcher watcher;
 
-   if (file.is_open()) {
-     while (file.good()) {
-       for (size_t i = 0; i < sizeof(str) / sizeof(string); i++) {
-         getline(file, line);  //считываем файл построчно и строку записываем в
-                               //переменную line
-         str[i] = line;
-       }
-     }
-     file.close();
-   } else {
-     cout << "Unable to open file\n";
-     std::terminate();
-   }
+    QFile file(filename);
 
-   Watcher watcher;
-   watcher.ttl =
-       atoi((str[2].substr(str[2].find('=') + 1, str[2].size() - 1)).c_str());
-   watcher.dst = str[0].substr(str[0].find('=') + 1, str[0].size() - 1);
-   watcher.src = str[1].substr(str[1].find('=') + 1, str[1].size() - 1);*/
-  QTextStream stream(stdin);
-  QString filename;
-  std::cout << "Enter the file name with ext: ";
-  stream >> filename;
-  //  filename = "config.txt";
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        stream.setDevice(&file);
 
-  Watcher watcher;
+        while (!stream.atEnd())
+        {
+            QString line = stream.readLine().trimmed();
 
-  QFile file(filename);
-  if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-    stream.setDevice(&file);
-    while (!stream.atEnd()) {
-      QString line = stream.readLine().trimmed();
-      if (line.startsWith("dst=")) {
-        watcher.dst = line.remove(0, 4).toStdWString();
-      } else if (line.startsWith("src=")) {
-        watcher.src = line.remove(0, 4).toStdWString();
-      } else if (line.startsWith("ttl=")) {
-        watcher.ttl = line.remove(0, 4).toInt();
-      }
+            if (line.startsWith("dst="))
+            {
+                watcher.dst = line.remove(0, 4).toStdWString();
+            }
+            else if (line.startsWith("src="))
+            {
+                watcher.src = line.remove(0, 4).toStdWString();
+            }
+            else if (line.startsWith("ttl="))
+            {
+                watcher.ttl = line.remove(0, 4).toInt();
+            }
+        }
+
+        file.close();
+    }
+    else
+    {
+        std::cout << "Unable to open file!" << std::endl;
+        std::exit(-1);
     }
 
-    file.close();
-  } else {
-    std::cout << "Unable to open file!" << std::endl;
-    std::exit(-1);
-  }
+    cout << "Source: " << watcher.src << endl;
+    cout << "Destination: " << watcher.dst << endl;
+    cout << "TTL: " << watcher.ttl << " sec" << endl;
 
-  cout << "Source: " << watcher.src << endl;
-  cout << "Destination: " << watcher.dst << endl;
-  cout << "TTL: " << watcher.ttl << " sec" << endl;
+    watcher.recursive_delete(watcher.dst);
+    watcher.recursive_copy(watcher.src, watcher.dst);
 
-  watcher.recursive_delete(watcher.dst);
-  watcher.recursive_copy(watcher.src, watcher.dst);
+    watcher.addWatchPath(QString::fromStdWString(watcher.src.wstring()));
 
-  watcher.addWatchPath(QString::fromStdWString(watcher.src.wstring()));
-
-  QTimer::singleShot(watcher.ttl * 1000, &watcher, &Watcher::timersSlot);
-  return app.exec();
+    QTimer::singleShot(watcher.ttl * 1000, &watcher, &Watcher::timersSlot);
+    return app.exec();
 }
