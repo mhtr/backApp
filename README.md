@@ -6,6 +6,7 @@
   - CMake 3.9 +
   - Qt 5.10.1 +
 
+
 ## Source download and compilation
 ```sh
 $ git clone https://github.com/mhtr/backApp && cd backApp
