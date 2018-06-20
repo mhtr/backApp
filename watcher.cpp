@@ -6,11 +6,11 @@
 #include <iostream>
 #include <filesystem>
 
-#include <boost/exception/all.hpp>
-
 #include "watcher.hpp"
 
-Watcher::Watcher(QObject *parent) : QObject(parent), ttl(0), dst(""), src("")
+using namespace std::filesystem;
+
+Watcher::Watcher(path src, path dst, int ttl, QObject *parent) : QObject(parent), ttl(ttl), dst(dst), src(src)
 {
     connect(&_sysWatcher, &QFileSystemWatcher::directoryChanged, this,
             &Watcher::sdirChange);
@@ -128,37 +128,32 @@ Watcher::endOfttl()
 
 void Watcher::recursive_copy(path src, path dst)
 {
-    try
+
+    if (is_directory(src))
     {
-        if (is_directory(src))
+        create_directories(dst);
+
+        for (auto &from : recursive_directory_iterator(src))
         {
-            create_directories(dst);
+            auto to = from.path().string();
+            to.replace(0, src.wstring().size(), dst.string());
 
-            for (auto &from : recursive_directory_iterator(src))
+            if (is_directory(from))
             {
-                auto to = from.path().string();
-                to.replace(0, src.wstring().size(), dst.string());
-
-                if (is_directory(from))
-                {
-                    create_directories(to);
-                }
-                else
-                {
-                    copy_file(from, to);
-                }
+                create_directories(to);
+            }
+            else
+            {
+                copy_file(from, to);
             }
         }
-        else
-        {
-            copy_file(src, dst);
-        }
     }
-    catch (...)
+    else
     {
-        std::cout << boost::current_exception_diagnostic_information() << std::endl;
+        copy_file(src, dst);
     }
 }
+
 
 void Watcher::recursive_delete(path dst)
 {

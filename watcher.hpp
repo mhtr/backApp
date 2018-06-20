@@ -6,24 +6,19 @@
 
 #include <filesystem>
 
-using namespace std::filesystem;
-
-// using namespace std::filesystem;
-
 class Watcher : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit Watcher(QObject *parent = Q_NULLPTR);
+    Watcher(std::filesystem::path src, std::filesystem::path dst, int ttl, QObject *parent = Q_NULLPTR);
+    virtual ~Watcher() = default;
 
     void addWatchPath(QString path);
-    void recursive_copy(path src, path dst);
-    void recursive_delete(path dst);
+    void recursive_copy(std::filesystem::path src, std::filesystem::path dst);
+    void recursive_delete(std::filesystem::path dst);
 
-    int ttl;
-    path dst;
-    path src;
+
 
     public
 slots:
@@ -31,6 +26,11 @@ slots:
     void timersSlot();
 
 private:
+
+    int ttl;
+    std::filesystem::path dst;
+    std::filesystem::path src;
+
     QMap<QString, QStringList> _currContents;
     QFileSystemWatcher _sysWatcher;
     inline void endOfttl();

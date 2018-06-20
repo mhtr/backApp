@@ -10,12 +10,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-//#include <string>
 
 #include "watcher.hpp"
-
-using namespace std;
-using namespace std::filesystem;
+#include "custom.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -26,51 +23,23 @@ int main(int argc, char *argv[])
     QString filename;
     std::cout << "Enter the file name with ext: ";
     stream >> filename;
-//    filename = "conf.txt";
 
-    Watcher watcher;
+    Custom custom(filename);
+    std::filesystem::path src = custom.parseSrc();
+    std::filesystem::path dst = custom.parseDst();
+    int ttl = custom.parseTtl();
 
-    QFile file(filename);
+    Watcher watcher(src, dst, ttl);
 
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        stream.setDevice(&file);
+    std::cout << "Source: " << src << std::endl;
+    std::cout << "Destination: " << dst << std::endl;
+    std::cout << "TTL: " << ttl << " sec" << std::endl;
 
-        while (!stream.atEnd())
-        {
-            QString line = stream.readLine().trimmed();
+    watcher.recursive_delete(dst);
+    watcher.recursive_copy(src, dst);
 
-            if (line.startsWith("dst="))
-            {
-                watcher.dst = line.remove(0, 4).toStdWString();
-            }
-            else if (line.startsWith("src="))
-            {
-                watcher.src = line.remove(0, 4).toStdWString();
-            }
-            else if (line.startsWith("ttl="))
-            {
-                watcher.ttl = line.remove(0, 4).toInt();
-            }
-        }
+    watcher.addWatchPath(QString::fromStdWString(src.wstring()));
 
-        file.close();
-    }
-    else
-    {
-        std::cout << "Unable to open file!" << std::endl;
-        std::exit(-1);
-    }
-
-    cout << "Source: " << watcher.src << endl;
-    cout << "Destination: " << watcher.dst << endl;
-    cout << "TTL: " << watcher.ttl << " sec" << endl;
-
-    watcher.recursive_delete(watcher.dst);
-    watcher.recursive_copy(watcher.src, watcher.dst);
-
-    watcher.addWatchPath(QString::fromStdWString(watcher.src.wstring()));
-
-    QTimer::singleShot(watcher.ttl * 1000, &watcher, &Watcher::timersSlot);
+    QTimer::singleShot(ttl * 1000, &watcher, &Watcher::timersSlot);
     return app.exec();
 }
