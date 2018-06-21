@@ -44,47 +44,25 @@ void Watcher::sdirChange(const QString &path)
     // Update the current set
     _currContents[path] = newEntryList;
 
-    if (!newFile.isEmpty() && !deleteFile.isEmpty())
+    // New File/Dir Added to Dir
+    if (!newFile.isEmpty())
     {
-        // File/Dir is renamed
+        qDebug() << "New Files/Dirs added: " << newFile;
 
-        if (newFile.count() == 1 && deleteFile.count() == 1)
+        foreach (QString file, newFile)
         {
-            qDebug() << "File Renamed from " << newFile.first() << " to "
-                     << deleteFile.first();
-        }
-    }
-    else
-    {
-        // New File/Dir Added to Dir
-        if (!newFile.isEmpty())
-        {
-            qDebug() << "New Files/Dirs added: " << newFile;
+            // Handle Operation on new files.....
+            std::filesystem::path from = path.toStdWString() / file.toStdWString();
+            _sysWatcher.addPath(QString::fromStdWString(from.wstring()));
 
-            foreach (QString file, newFile)
-            {
-                // Handle Operation on new files.....
-                std::filesystem::path from = path.toStdWString() / file.toStdWString();
-                _sysWatcher.addPath(QString::fromStdWString(from.wstring()));
+            auto to = from.wstring();
+            to.replace(0, src.wstring().size(), dst.wstring());
 
-                auto to = from.wstring();
-                to.replace(0, src.wstring().size(), dst.wstring());
-
-                recursive_copy(from, to);
-            }
+            recursive_copy(from, to);
         }
 
-        // File/Dir is deleted from Dir
 
-        if (!deleteFile.isEmpty())
-        {
-            qDebug() << "Files/Dirs deleted: " << deleteFile;
 
-            foreach (QString file, deleteFile)
-            {
-                // Handle operation of each deleted file....
-            }
-        }
     }
 }
 
@@ -117,14 +95,6 @@ void Watcher::addWatchPath(QString path)
                                   QDir::NoDotAndDotDot | QDir::AllDirs | QDir::Files, QDir::DirsFirst);
     }
 }
-
-/* to do :
- * add TTL for each file
-void
-Watcher::endOfttl()
-{
-  QTimer::singleShot(ttl * 1000, this, &Watcher::timersSlot);
-}*/
 
 void Watcher::recursive_copy(path src, path dst)
 {

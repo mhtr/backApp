@@ -12,7 +12,6 @@ class Watcher : public QObject
 
 public:
     Watcher(std::filesystem::path src, std::filesystem::path dst, int ttl, QObject *parent = Q_NULLPTR);
-    virtual ~Watcher() = default;
 
     void addWatchPath(QString path);
     void recursive_copy(std::filesystem::path src, std::filesystem::path dst);
@@ -33,5 +32,4 @@ private:
 
     QMap<QString, QStringList> _currContents;
     QFileSystemWatcher _sysWatcher;
-    inline void endOfttl();
 };
